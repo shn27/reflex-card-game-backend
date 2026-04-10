@@ -23,12 +23,20 @@ reflex-card-game-backend/
 └── go.mod
 ```
 
+## Config (`.env`)
+
+| Variable          | Default                    | Description                        |
+|-------------------|----------------------------|------------------------------------|
+| `PORT`            | `8080`                     | HTTP listen port                   |
+| `ALLOWED_ORIGINS` | `*`                        | Comma-separated WebSocket origins  |
+| `CARD_INTERVAL_MS`| `2000`                     | Milliseconds between card reveals  |
+
 ## Run locally
 
 ```bash
 cp .env.example .env
 go mod tidy
-go run ./cmd/server
+go run main.go
 ```
 
 ## Docker
@@ -60,11 +68,3 @@ ws://localhost:8080/ws
 | `type`  | When              |
 |---------|-------------------|
 | `click` | Player clicks button |
-
-## Config (`.env`)
-
-| Variable          | Default                    | Description                        |
-|-------------------|----------------------------|------------------------------------|
-| `PORT`            | `8080`                     | HTTP listen port                   |
-| `ALLOWED_ORIGINS` | `*`                        | Comma-separated WebSocket origins  |
-| `CARD_INTERVAL_MS`| `2000`                     | Milliseconds between card reveals  |
