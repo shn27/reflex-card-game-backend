@@ -1,0 +1,34 @@
+# Build artifacts
+bin/
+build/
+dist/
+coverage/
+*.out
+*.cov
+*.coverprofile
+*.pprof
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs and temp
+*.log
+.tmp/
+.cache/
+
+# Go test binaries
+*.test
+
+# Env files
+.env.local
+
+# Local-only config overlays
+config/*.local.yaml
+
+# Dummy config files
+config/*.dummy.yaml
