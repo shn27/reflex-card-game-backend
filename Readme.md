@@ -2,6 +2,11 @@
 
 Go WebSocket backend for the Reflex Card Game.
 
+## Checkout the Live APP
+```
+reflex-card-game-frontend.vercel.app
+```
+
 ## Structure
 
 ```
@@ -31,20 +36,26 @@ reflex-card-game-backend/
 | `ALLOWED_ORIGINS` | `*`                        | Comma-separated WebSocket origins  |
 | `CARD_INTERVAL_MS`| `2000`                     | Milliseconds between card reveals  |
 
-## Run locally
+## Installing the application
+You can run the application by cloning this to your local machine or directly from a Docker image.
+The following sections will guide you to install the application:
 
+### By Cloning Repository Locally
 ```bash
+$ git@github.com:shn27/reflex-card-game-backend.git
+$ cd reflex-card-game-backend
 cp .env.example .env
 go mod tidy
 go run main.go
 ```
 
-## Docker
+### Docker
 
 ```bash
 docker build -t reflex-backend .
 docker run -p 8080:8080 --env-file .env reflex-backend
 ```
+-----
 
 ## WebSocket endpoint
 
