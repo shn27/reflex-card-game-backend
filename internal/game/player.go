@@ -17,6 +17,7 @@ func NewPlayer(id int, conn Sender) *Player {
 	return &Player{ID: id, conn: conn}
 }
 
+//Player → forwards message → Client
 func (p *Player) Send(msg OutMessage) {
 	p.conn.Send(msg)
 }
