@@ -2,11 +2,12 @@ package ws
 
 import (
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/shn27/reflex-card-game-backend/internal/game"
+	"github.com/shn27/reflex-card-game-backend/internal/logger"
+	"go.uber.org/zap"
 )
 
 const (
@@ -39,7 +40,9 @@ func (c *Client) Send(msg game.OutMessage) {
 	select {
 	case c.outgoing <- msg:
 	default:
-		log.Printf("[client] send buffer full — dropping %s", msg.Type)
+		logger.Logger.Warn("[client] send buffer full — dropping message",
+			zap.String("type", msg.Type),
+		)
 	}
 }
 
@@ -69,7 +72,7 @@ func (c *Client) WritePump() {
 				return
 			}
 			if err := c.conn.WriteJSON(msg); err != nil {
-				log.Printf("[client] write error: %v", err)
+				logger.Logger.Error("[client] write error", zap.Error(err))
 				return
 			}
 
@@ -106,14 +109,14 @@ func (c *Client) ReadPump(mm *game.Matchmaker) {
 		_, raw, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("[client] read error: %v", err)
+				logger.Logger.Error("[client] read error:", zap.Error(err))
 			}
 			return
 		}
 
 		var msg game.InMessage
 		if err := json.Unmarshal(raw, &msg); err != nil {
-			log.Printf("[client] malformed message: %v", err)
+			logger.Logger.Error("[client] malformed message: ", zap.Error(err))
 			continue
 		}
 
@@ -134,6 +137,8 @@ func (c *Client) route(msg game.InMessage, mm *game.Matchmaker) {
 		room.HandleClick(c.playerID)
 
 	default:
-		log.Printf("[client] unknown message type: %q", msg.Type)
+		logger.Logger.Warn("[client] unknown message type",
+			zap.String("type", msg.Type),
+		)
 	}
 }

@@ -1,9 +1,11 @@
 package game
 
 import (
-	"log"
 	"sync"
 	"time"
+
+	"github.com/shn27/reflex-card-game-backend/internal/logger"
+	"go.uber.org/zap"
 )
 
 type Phase int
@@ -68,7 +70,9 @@ func (r *Room) Start() {
 	r.phase = PhasePlaying
 	r.mu.Unlock()
 
-	log.Printf("[room %s] game started", r.id)
+	logger.Logger.Info("[room] game started",
+		zap.String("room_id", r.id),
+	)
 
 	ticker := time.NewTicker(r.cardInterval)
 	defer ticker.Stop()
@@ -86,7 +90,11 @@ func (r *Room) Start() {
 		if r.cardIndex >= len(r.deck) {
 			r.phase = PhaseFinished
 			r.mu.Unlock()
-			log.Printf("[room %s] draw — all 52 cards shown", r.id)
+
+			logger.Logger.Info("[room] draw — all cards shown",
+				zap.String("room_id", r.id),
+			)
+
 			r.broadcast(OutMessage{
 				Type:   MsgGameOver,
 				Result: "draw",
@@ -99,7 +107,13 @@ func (r *Room) Start() {
 		idx := r.cardIndex
 		r.mu.Unlock()
 
-		log.Printf("[room %s] card %d/52: %s of %s", r.id, idx+1, card.Rank, card.Suit)
+		logger.Logger.Info("[room] card drawn",
+			zap.String("room_id", r.id),
+			zap.Int("card_index", idx+1),
+			zap.String("rank", card.Rank),
+			zap.String("suit", card.Suit),
+		)
+
 		r.broadcast(OutMessage{
 			Type:      MsgCardReveal,
 			Card:      &card,
@@ -122,7 +136,13 @@ func (r *Room) HandleClick(playerID int) {
 	opponentID := 3 - playerID
 
 	if card.IsAce() {
-		log.Printf("[room %s] player %d clicked ACE (%s of %s) — wins", r.id, playerID, card.Rank, card.Suit)
+		logger.Logger.Info("[room] player clicked ACE — wins",
+			zap.String("room_id", r.id),
+			zap.Int("player_id", playerID),
+			zap.String("rank", card.Rank),
+			zap.String("suit", card.Suit),
+		)
+
 		r.sendTo(playerID, OutMessage{
 			Type:     MsgGameOver,
 			Result:   "win",
@@ -140,7 +160,12 @@ func (r *Room) HandleClick(playerID int) {
 		return
 	}
 
-	log.Printf("[room %s] player %d false-clicked %s of %s — loses", r.id, playerID, card.Rank, card.Suit)
+	logger.Logger.Info("[room] player false-clicked — loses",
+		zap.String("room_id", r.id),
+		zap.Int("player_id", playerID),
+		zap.String("rank", card.Rank),
+		zap.String("suit", card.Suit),
+	)
 	r.sendTo(playerID, OutMessage{
 		Type:   MsgGameOver,
 		Result: "lose",

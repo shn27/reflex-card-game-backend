@@ -2,10 +2,12 @@ package game
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/shn27/reflex-card-game-backend/internal/logger"
+	"go.uber.org/zap"
 )
 
 // Matchmaker pairs players who click Play into game rooms.
@@ -43,7 +45,9 @@ func (m *Matchmaker) Join(conn Sender, setRoom func(roomID string, playerID int)
 		m.mu.Unlock()
 
 		setRoom(roomID, 1)
-		log.Printf("[matchmaker] player 1 waiting in %s", roomID)
+		logger.Logger.Info("[matchmaker] player waiting",
+			zap.String("room_id", roomID),
+		)
 		conn.Send(OutMessage{Type: MsgWaiting, Message: "Waiting for an opponent…"})
 		return
 	}
@@ -62,7 +66,9 @@ func (m *Matchmaker) Join(conn Sender, setRoom func(roomID string, playerID int)
 	w.setRoom(room.ID(), p1ID)
 	setRoom(room.ID(), p2ID)
 
-	log.Printf("[matchmaker] paired into %s", room.ID())
+	logger.Logger.Info("[matchmaker] paired",
+		zap.String("room_id", room.ID()),
+	)
 
 	w.conn.Send(OutMessage{Type: MsgGameStart, PlayerID: p1ID})
 	conn.Send(OutMessage{Type: MsgGameStart, PlayerID: p2ID})
@@ -77,7 +83,8 @@ func (m *Matchmaker) Leave(conn Sender, roomID string, playerID int) {
 	if m.waiting != nil && m.waiting.conn == conn {
 		m.waiting = nil
 		m.mu.Unlock()
-		log.Printf("[matchmaker] waiting player disconnected")
+		logger.Logger.Info("[matchmaker] waiting player disconnected")
+
 		return
 	}
 	m.mu.Unlock()
@@ -94,7 +101,10 @@ func (m *Matchmaker) Leave(conn Sender, roomID string, playerID int) {
 	room := val.(*Room)
 	survivorID := 3 - playerID
 	room.OpponentDisconnected(survivorID)
-	log.Printf("[matchmaker] player %d left %s", playerID, roomID)
+	logger.Logger.Info("[matchmaker] player left",
+		zap.Int("player_id", playerID),
+		zap.String("room_id", roomID),
+	)
 }
 
 // GetRoom returns the room for a given ID.
