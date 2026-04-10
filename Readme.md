@@ -7,27 +7,6 @@ Go WebSocket backend for the Reflex Card Game.
 reflex-card-game-frontend.vercel.app
 ```
 
-## Structure
-
-```
-reflex-card-game-backend/
-├── cmd/server/
-│   └── main.go          # entry point — config, wiring, HTTP mux
-├── internal/
-│   ├── game/
-│   │   ├── card.go      # Card type, NewShuffledDeck
-│   │   ├── message.go   # InMessage / OutMessage wire types
-│   │   ├── player.go    # Player + Sender interface
-│   │   ├── room.go      # game loop, click handling
-│   │   └── matchmaker.go# pairs two players into a room
-│   └── ws/
-│       ├── client.go    # WebSocket read/write pumps, implements game.Sender
-│       └── handler.go   # HTTP → WebSocket upgrade, origin check
-├── .env.example
-├── Dockerfile
-└── go.mod
-```
-
 ## Config (`.env`)
 
 | Variable          | Default                    | Description                        |
