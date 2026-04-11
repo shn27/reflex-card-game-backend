@@ -33,7 +33,7 @@ func LoadConfig() Config {
 		logger.Sugar.Fatalf("[config] invalid CARD_INTERVAL_MS: %s", os.Getenv("CARD_INTERVAL_MS"))
 	}
 
-	maxWSPerIP := parseInt("MAX_NUM_WS_PER_IP", 2)
+	maxWSPerIP := parseInt("MAX_NUM_WS_PER_IP", 20)
 	maxWSTotal := parseInt("MAX_NUM_OF_WS_ALLOWED_INTOTAL", 10000)
 
 	return Config{
