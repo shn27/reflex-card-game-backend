@@ -10,13 +10,24 @@ Real-time WebSocket backend for **Reflex** — a two-player card reaction game b
 
 ## Table of Contents
 
+- [Live App](#live-app)
 - [Game Rules](#game-rules)
 - [How to Run](#how-to-run)
-- [Live App](https://reflex-card-game-frontend.vercel.app)
 - [API Documentation](#api-documentation)
 - [Tech Stack & Design Decisions](#tech-stack--design-decisions)
 - [Configuration](#configuration)
 - [Design Flow](#design-flow)
+
+---
+
+## Live App
+
+[Live App](https://reflex-card-game-frontend.vercel.app)
+ It can take a bit only for the first time.
+
+Frontend deployed on [vercel](https://vercel.com).
+
+Backend deployed on [render](https://render.com/).
 
 ---
 
@@ -95,6 +106,18 @@ Sent to the first player while they wait for an opponent.
 {
   "type": "waiting",
   "message": "Waiting for an opponent…"
+}
+```
+
+---
+
+#### `rate_limited`
+Sent to the client requesting for upgrading http to websocket.
+
+```json
+{
+  "type": "rate_limited",
+  "message": "DenyReason:too many connections from your IP, please try again later"
 }
 ```
 
@@ -208,6 +231,11 @@ The server exposes exactly two routes: `/ws` and `/health`. Reaching for Gin or 
 
 Zap's structured, zero-allocation logging is well suited to a server that logs on every card reveal and every player event. Structured fields (`zap.String`, `zap.Int`) make logs machine-parseable without additional tooling — useful when shipping logs to an aggregator in a containerised environment.
 
+### Rate Limiter
+Algorithm : Leaky Bucket
+
+Limiting number of websocket per IP and total number of websocket at a time.
+
 ### `Sender` Interface
 
 The `game` package defines a minimal interface:
@@ -246,10 +274,14 @@ cp .env.example .env
 | `PORT` | `8080` | HTTP listen port |
 | `ALLOWED_ORIGINS` | `*` | Comma-separated allowed WebSocket origins. In production, set this to your frontend URL (e.g. `https://reflex-card-game-frontend.vercel.app`) |
 | `CARD_INTERVAL_MS` | `2000` | Milliseconds between card reveals. Minimum enforced: `500` |
-
+| `MAX_NUM_WS_PER_IP` | `20` | Maximum number of websocket allowed per IP |
+| `MAX_NUM_OF_WS_ALLOWED_INTOTAL` | Maximum number of websocket allowed in total |
 
 ---
 
 ## Design Flow
 
 ![System Design Flow Diagram](data/reflect-card-game.drawio.svg "System design flow")
+
+
+![Rate Limiter Flow Diagram](data/Rate_Limiter_Flow.drawio.svg "Rate Limiter flow")
