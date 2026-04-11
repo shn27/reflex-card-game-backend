@@ -7,10 +7,11 @@ const (
 
 // Outbound message types (server → client).
 const (
-	MsgWaiting    = "waiting"
-	MsgGameStart  = "game_start"
-	MsgCardReveal = "card_reveal"
-	MsgGameOver   = "game_over"
+	MsgWaiting     = "waiting"
+	MsgGameStart   = "game_start"
+	MsgCardReveal  = "card_reveal"
+	MsgGameOver    = "game_over"
+	MsgRateLimited = "rate_limited" // sent before closing a rejected connection
 )
 
 // InMessage is the envelope for every client → server message.
