@@ -23,7 +23,7 @@ Real-time WebSocket backend for **Reflex** — a two-player card reaction game b
 ## Live App
 
 [Live App](https://reflex-card-game-frontend.vercel.app)
- It can take a bit only for the first time.
+ It can take a bit while matchmaking only for the first time.
 
 Frontend deployed on [vercel](https://vercel.com).
 
