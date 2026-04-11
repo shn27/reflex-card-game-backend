@@ -12,10 +12,10 @@ Real-time WebSocket backend for **Reflex** — a two-player card reaction game b
 
 - [Live App](#live-app)
 - [Game Rules](#game-rules)
+- [Configuration](#configuration)
 - [How to Run](#how-to-run)
 - [API Documentation](#api-documentation)
 - [Tech Stack & Design Decisions](#tech-stack--design-decisions)
-- [Configuration](#configuration)
 - [Design Flow](#design-flow)
 
 ---
