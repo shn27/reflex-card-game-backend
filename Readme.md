@@ -43,6 +43,24 @@ Backend deployed on [render](https://render.com/).
 
 ---
 
+## Configuration
+
+Copy `.env.example` to `.env` and adjust as needed:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `8080` | HTTP listen port |
+| `ALLOWED_ORIGINS` | `*` | Comma-separated allowed WebSocket origins. In production, set this to your frontend URL (e.g. `https://reflex-card-game-frontend.vercel.app`) |
+| `CARD_INTERVAL_MS` | `2000` | Milliseconds between card reveals. Minimum enforced: `500` |
+| `MAX_NUM_WS_PER_IP` | `20` | Maximum number of websocket allowed per IP |
+| `MAX_NUM_OF_WS_ALLOWED_INTOTAL`| `10000`| Maximum number of websocket allowed in total |
+
+---
+
 ## How to Run
 
 ### Prerequisites
@@ -55,16 +73,24 @@ Backend deployed on [render](https://render.com/).
 ```bash
 git clone git@github.com:shn27/reflex-card-game-backend.git
 cd reflex-card-game-backend
+```
 
+### Run both Backend & Frontend with Docker Compose
+```
+docker compose up -d
+```
+Play the game on `http://localhost:3000`.
+
+### Run Backend
+```bash
 cp .env.example .env   # configure your environment
-
 go mod tidy
 go run main.go
 ```
 
 The server starts on `http://localhost:8080`.
 
-### Docker
+### With Docker
 
 ```bash
 # Build
@@ -76,7 +102,7 @@ docker run -p 8080:8080 --env-file .env.example reflex-backend
 
 The Dockerfile uses a multi-stage build. The final image is based on `scratch` — no OS, no shell, just the compiled binary.
 
-### Frontend
+### Run Frontend
 
 See the [reflex-card-game-frontend](https://github.com/shn27/reflex-card-game-frontend) repository for setup instructions, or visit the live app:
 
@@ -258,24 +284,6 @@ The server controls everything: deck order, card timing, click validation, and r
 ### No Persistence
 
 Game state lives entirely in memory. There is no database or reconnection logic. A disconnecting player ends the game immediately — appropriate for a reflex game where a seconds-long interruption makes the session unplayable regardless.
-
----
-
-## Configuration
-
-Copy `.env.example` to `.env` and adjust as needed:
-
-```bash
-cp .env.example .env
-```
-
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `8080` | HTTP listen port |
-| `ALLOWED_ORIGINS` | `*` | Comma-separated allowed WebSocket origins. In production, set this to your frontend URL (e.g. `https://reflex-card-game-frontend.vercel.app`) |
-| `CARD_INTERVAL_MS` | `2000` | Milliseconds between card reveals. Minimum enforced: `500` |
-| `MAX_NUM_WS_PER_IP` | `20` | Maximum number of websocket allowed per IP |
-| `MAX_NUM_OF_WS_ALLOWED_INTOTAL` | Maximum number of websocket allowed in total |
 
 ---
 
