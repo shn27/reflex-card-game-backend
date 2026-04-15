@@ -101,8 +101,6 @@ func (c *Client) ReadPump(mm *game.Matchmaker) {
 		return nil
 	})
 
-	// why joining into a room is not separated from ReadPump
-
 	mm.Join(c, c.SetRoom)
 
 	for {
