@@ -85,11 +85,12 @@ func (c *Client) WritePump() {
 	}
 }
 
-// ReadPump blocks reading messages from the WebSocket.
+// ReadPump blocks    reading messages from the WebSocket.
 // It drives the client lifecycle: join → play → leave.
 // Must run in its own goroutine (or the handler goroutine).
 func (c *Client) ReadPump(mm *game.Matchmaker) {
 	defer func() {
+		// when player is closing connection mm.Leave is called.
 		mm.Leave(c, c.roomID, c.playerID)
 		close(c.outgoing)
 		c.conn.Close()
