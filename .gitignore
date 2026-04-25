@@ -32,3 +32,6 @@ config/*.local.yaml
 
 # Dummy config files
 config/*.dummy.yaml
+
+#binary
+*.exe

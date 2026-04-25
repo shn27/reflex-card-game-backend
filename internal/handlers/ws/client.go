@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -102,7 +103,7 @@ func (c *Client) ReadPump(mm *game.Matchmaker) {
 		return nil
 	})
 
-	mm.Join(c, c.SetRoom)
+	//	mm.Join(c, c.SetRoom)
 
 	for {
 		_, raw, err := c.conn.ReadMessage()
@@ -134,7 +135,18 @@ func (c *Client) route(msg game.InMessage, mm *game.Matchmaker) {
 			return
 		}
 		room.HandleClick(c.playerID)
+	case game.MsgRoomAnonymous:
+		mm.Join(c, c.SetRoom)
+	case game.MsgRoomCreate:
+		fmt.Println("Message: room create")
+		mm.CreateRoom(c, c.SetRoom)
+	case game.MsgRoomJoin:
+		fmt.Println("Message: room join")
+		mm.JoinRoom(c, msg.Secret, c.SetRoom)
 
+	case game.MsgRoomStart:
+		fmt.Println("Message: room strt")
+		mm.StartRoom(msg.Secret, c.playerID, c)
 	default:
 		logger.Logger.Warn("[client] unknown message type",
 			zap.String("type", msg.Type),

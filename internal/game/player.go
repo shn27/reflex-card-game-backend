@@ -9,7 +9,7 @@ type Sender interface {
 
 // Player holds the identity and transport of one participant in a room.
 type Player struct {
-	ID   int // 1 or 2
+	ID   int // 1 , 2 ..
 	conn Sender
 }
 

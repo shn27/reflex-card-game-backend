@@ -24,9 +24,9 @@ var rootCmd = &cobra.Command{
 			logger.Sugar.Info("[config] no .env file found, using environment")
 		}
 
-		cfg := config.LoadConfig()
+		config.LoadConfig()
 
-		routes.SetupRoutes(cfg)
+		routes.SetupRoutes(config.Cfg)
 	},
 }
 
