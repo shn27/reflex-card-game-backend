@@ -18,9 +18,13 @@ type Config struct {
 	// Rate limiting
 	MaxWSPerIP int64
 	MaxWSTotal int64
+
+	MaxNumberOfPlayerAllowedInRoom int64
 }
 
-func LoadConfig() Config {
+var Cfg Config
+
+func LoadConfig() {
 	port := getEnv("PORT", "8080")
 
 	origins := strings.Split(getEnv("ALLOWED_ORIGINS", "*"), ",")
@@ -34,14 +38,17 @@ func LoadConfig() Config {
 	}
 
 	maxWSPerIP := parseInt("MAX_NUM_WS_PER_IP", 20)
-	maxWSTotal := parseInt("MAX_NUM_OF_WS_ALLOWED_INTOTAL", 10000)
+	maxWSTotal := parseInt("MAX_NUM_OF_WS_ALLOWED_INTOTAL", 1000)
 
-	return Config{
-		Port:           port,
-		AllowedOrigins: origins,
-		CardInterval:   time.Duration(intervalMs) * time.Millisecond,
-		MaxWSPerIP:     maxWSPerIP,
-		MaxWSTotal:     maxWSTotal,
+	maxNumberOfPlayerAllowedInRoom := parseInt("MAX_NUM_OF_PlAYER_ALLOWED_IN_ROOM", 10)
+
+	Cfg = Config{
+		Port:                           port,
+		AllowedOrigins:                 origins,
+		CardInterval:                   time.Duration(intervalMs) * time.Millisecond,
+		MaxWSPerIP:                     maxWSPerIP,
+		MaxWSTotal:                     maxWSTotal,
+		MaxNumberOfPlayerAllowedInRoom: maxNumberOfPlayerAllowedInRoom,
 	}
 }
 
