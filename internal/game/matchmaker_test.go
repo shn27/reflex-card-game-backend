@@ -4,9 +4,14 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/shn27/reflex-card-game-backend/internal/config"
+	"github.com/shn27/reflex-card-game-backend/internal/logger"
 )
 
 func newTestMatchmaker() *Matchmaker {
+	logger.InitLogger()
+	config.LoadConfig()
 	return NewMatchmaker(10 * time.Millisecond)
 }
 

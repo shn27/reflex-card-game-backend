@@ -1,6 +1,8 @@
 package game
 
-import "sync"
+import (
+	"sync"
+)
 
 // mockSender captures every OutMessage sent to it and mirrors what ws.Client
 // does in production — storing roomID and playerID via the setRoom callback.

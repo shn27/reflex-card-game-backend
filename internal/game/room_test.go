@@ -3,11 +3,16 @@ package game
 import (
 	"testing"
 	"time"
+
+	"github.com/shn27/reflex-card-game-backend/internal/config"
+	"github.com/shn27/reflex-card-game-backend/internal/logger"
 )
 
 // helpers
 
 func newTestRoom() (*Room, *mockSender, *mockSender) {
+	logger.InitLogger()
+	config.LoadConfig()
 	room := newRoom("test-room", 10*time.Millisecond, RoomKindAnonymous)
 	p1, p2 := newMock(), newMock()
 	room.AddPlayer(p1)

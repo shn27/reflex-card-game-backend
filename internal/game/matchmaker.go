@@ -45,11 +45,22 @@ func NewMatchmaker(cardInterval time.Duration) *Matchmaker {
 
 // Join enqueues a player into the global queue. If a partner is already
 // waiting a room is created, both players are notified, and the game starts.
+//
+// The room is created and stored when p1 arrives — not when p2 arrives.
+// This ensures Leave can always find the room if p1 disconnects before
+// being matched, preventing the getRoom miss that caused a silent no-op.
 func (m *Matchmaker) Join(conn Sender, setRoom func(roomID string, playerID int)) {
 	m.mu.Lock()
 
 	if m.waiting == nil {
 		roomID := fmt.Sprintf("room-%d", m.roomSeq.Add(1))
+
+		// Create the room immediately and add p1 so that if p1 disconnects
+		// before p2 arrives, Leave can find and clean up the room correctly.
+		room := newRoom(roomID, m.cardInterval, RoomKindAnonymous)
+		room.AddPlayer(conn)
+		m.rooms.Store(roomID, room)
+
 		m.waiting = &waitingPlayer{conn: conn, roomID: roomID, setRoom: setRoom}
 		m.mu.Unlock()
 
@@ -63,18 +74,17 @@ func (m *Matchmaker) Join(conn Sender, setRoom func(roomID string, playerID int)
 	m.waiting = nil
 	m.mu.Unlock()
 
-	room := newRoom(w.roomID, m.cardInterval, RoomKindAnonymous)
-	m.rooms.Store(room.ID(), room)
+	// Room already exists with p1 in it — retrieve it and add p2.
+	room, _ := m.getRoom(w.roomID)
 
-	p1ID, _ := room.AddPlayer(w.conn)
 	p2ID, _ := room.AddPlayer(conn)
 
-	w.setRoom(room.ID(), p1ID)
+	w.setRoom(room.ID(), 1)
 	setRoom(room.ID(), p2ID)
 
 	logger.Logger.Info("[matchmaker] anonymous pair created", zap.String("room_id", room.ID()))
 
-	w.conn.Send(OutMessage{Type: MsgGameStart, PlayerID: p1ID})
+	w.conn.Send(OutMessage{Type: MsgGameStart, PlayerID: 1})
 	conn.Send(OutMessage{Type: MsgGameStart, PlayerID: p2ID})
 
 	go room.Start()
@@ -182,22 +192,27 @@ func (m *Matchmaker) StartRoom(secret string, callerID int, conn Sender) {
 	go room.Start()
 }
 
+// ── Leave ─────────────────────────────────────────────────────────────────────
+
 // Leave is the single entry point called by the WS handler whenever a
 // connection closes, regardless of room type or game phase.
-
-// Phase    | Kind      | Who left  | Action
-// ---------|-----------|-----------|------------------------------------------
-// Waiting  | Anonymous | only p1   | clear waiting slot (Join handles this)
-// Waiting  | Secret    | host (1)  | notify all → MsgRoomHostLeft, delete room
-// Waiting  | Secret    | guest     | remove from lobby, broadcast MsgRoomUpdated
-// Playing  | Anonymous | anyone    | survivor wins (MsgGameOver)
-// Playing  | Secret    | anyone    | if last player → survivor wins
 //
-//	if others remain → silent remove, no message
+// Decision matrix:
+//
+//	Phase    | Kind      | Who left  | Action
+//	---------|-----------|-----------|------------------------------------------
+//	Waiting  | Anonymous | p1        | delete pre-created room, clear waiting slot
+//	Waiting  | Secret    | host (1)  | notify all → MsgRoomHostLeft, delete room
+//	Waiting  | Secret    | guest     | remove from lobby, broadcast MsgRoomUpdated
+//	Playing  | Anonymous | anyone    | survivor wins (MsgGameOver)
+//	Playing  | Secret    | anyone    | if last player → survivor wins
+//	                                   if others remain → silent remove, no message
 func (m *Matchmaker) Leave(conn Sender, roomID string, playerID int) {
 	// Player disconnected before being matched (anonymous waiting slot).
 	if roomID == "" {
+		m.mu.Lock()
 		m.clearWaitingSlot(conn)
+		m.mu.Unlock()
 		return
 	}
 
@@ -207,7 +222,6 @@ func (m *Matchmaker) Leave(conn Sender, roomID string, playerID int) {
 	}
 
 	room.mu.Lock()
-	//defer room.mu.Unlock()
 
 	switch room.phase {
 	case PhaseWaiting:
@@ -226,8 +240,9 @@ func (m *Matchmaker) leaveWaiting(room *Room, conn Sender, playerID int) {
 	switch room.kind {
 
 	case RoomKindAnonymous:
-		// Anonymous waiting rooms only ever have one player (they start the
-		// moment a second player joins). Leaving just clears the global slot.
+		// p1 disconnected before being paired. The room was pre-created when
+		// p1 joined so Leave could find it — delete it now that p1 is gone.
+		m.rooms.Delete(room.id)
 		m.clearWaitingSlot(conn)
 
 	case RoomKindSecret:
@@ -266,7 +281,6 @@ func (m *Matchmaker) leavePlaying(room *Room, playerID int) {
 		room.mu.Unlock()
 		return
 	}
-
 	room.removePlayerLocked(playerID)
 
 	logger.Logger.Info("[matchmaker] player left mid-game",
@@ -298,18 +312,18 @@ func (m *Matchmaker) leavePlaying(room *Room, playerID int) {
 			// No frontend message; the game continues.
 			room.mu.Unlock()
 		}
+	default:
+		room.mu.Unlock()
 	}
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 func (m *Matchmaker) clearWaitingSlot(conn Sender) {
-	//m.mu.Lock()
 	if m.waiting != nil && m.waiting.conn == conn {
 		m.waiting = nil
 		logger.Logger.Info("[matchmaker] waiting player disconnected before match")
 	}
-	//m.mu.Unlock()
 }
 
 func (m *Matchmaker) getRoom(roomID string) (*Room, bool) {
